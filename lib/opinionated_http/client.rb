@@ -58,7 +58,7 @@ module OpinionatedHTTP
     def post(action:, path: "/#{action}", parameters: nil)
       path    = "/#{path}" unless path.start_with?("/")
       request = Net::HTTP::Post.new(path)
-      request.set_form_data(*parameters) if parameters
+      request.set_form_data(parameters) if parameters
 
       response = request_with_retry(action: action, path: path, request: request)
 
