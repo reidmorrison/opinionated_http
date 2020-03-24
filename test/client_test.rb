@@ -35,7 +35,7 @@ module OpinionatedHTTP
         let(:get_verb) { 'Get' }
 
         it 'creates a request corresponding to the supplied verb' do
-          req = http.generic_request(path: path, verb: post_verb)
+          req  = http.generic_request(path: path, verb: post_verb)
           req2 = http.generic_request(path: path, verb: get_verb)
 
           assert_kind_of Net::HTTP::Post, req
@@ -44,7 +44,7 @@ module OpinionatedHTTP
 
         it 'returns a request with supplied headers' do
           test_headers = {'test1' => 'yes_test_1', 'test2' => 'yes_test_2'}
-          req = http.generic_request(path: path, verb: get_verb, headers: test_headers)
+          req          = http.generic_request(path: path, verb: get_verb, headers: test_headers)
 
           assert_equal test_headers['test1'], req['test1']
           assert_equal test_headers['test2'], req['test2']
@@ -52,7 +52,7 @@ module OpinionatedHTTP
 
         it 'returns a request with supplied body' do
           test_body = "nice bod"
-          req = http.generic_request(path: path, verb: get_verb, body: test_body)
+          req       = http.generic_request(path: path, verb: get_verb, body: test_body)
 
           assert_equal test_body, req.body
         end
