@@ -55,7 +55,7 @@ module OpinionatedHTTP
       response.body
     end
 
-    def post(action:, path: "/#{action}", headers: nil, body: nil, form_data: nil, auth: nil)
+    def post(action:, path: "/#{action}", headers: nil, body: nil, form_data: nil, username: nil, password: nil)
       path    = "/#{path}" unless path.start_with?("/")
       request = generic_request(path: path, verb: 'Post', headers: headers, body: body, form_data: form_data, auth: auth)
 
@@ -64,15 +64,14 @@ module OpinionatedHTTP
       response.body
     end
 
-    # auth expects hash of the form {'username' =>, 'password' =>}
-    def generic_request(path:, verb:, headers: nil, body: nil, form_data: nil, auth: nil)
+    def generic_request(path:, verb:, headers: nil, body: nil, form_data: nil, username: nil, password: nil)
       raise(ArgumentError, 'setting form data will overwrite supplied content-type') unless headers_and_form_data_compatible? headers, form_data
       raise(ArgumentError, 'setting form data will overwrite supplied body') if body && form_data
 
       request = Net::HTTP.const_get(verb).new(path, headers)
       request.body = body if body
       request.set_form_data form_data if form_data
-      request.basic_auth(auth['username'], auth['password']) if auth
+      request.basic_auth(username, password) if username && password
       request
     end
 

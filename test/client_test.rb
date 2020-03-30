@@ -67,10 +67,11 @@ module OpinionatedHTTP
         end
 
         it 'add supplied authentication to the request' do
-          test_auth = {'username' => 'admin', 'password' => 'hunter2'}
-          req = http.generic_request(path: path, verb: get_verb, auth: test_auth)
+          test_un = 'admin'
+          test_pw = 'hunter2'
+          req = http.generic_request(path: path, verb: get_verb, username: test_un, password: test_pw)
           req2 = Net::HTTP::Get.new(path)
-          req2.basic_auth test_auth['username'], test_auth['password']
+          req2.basic_auth test_un, test_pw
 
           assert_equal req2['authorization'], req['authorization']
         end
