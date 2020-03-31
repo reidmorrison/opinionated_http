@@ -49,20 +49,30 @@ module OpinionatedHTTP
       path = "/#{path}" unless path.start_with?("/")
       path = "#{path}?#{URI.encode_www_form(parameters)}" if parameters
 
-      request  = Net::HTTP::Get.new(path)
+      request  = generic_request(path: path, verb: 'Get')
       response = request_with_retry(action: action, path: path, request: request)
 
       response.body
     end
 
-    def post(action:, path: "/#{action}", parameters: nil)
+    def post(action:, path: "/#{action}", headers: nil, body: nil, form_data: nil, username: nil, password: nil)
       path    = "/#{path}" unless path.start_with?("/")
-      request = Net::HTTP::Post.new(path)
-      request.set_form_data(parameters) if parameters
+      request = generic_request(path: path, verb: 'Post', headers: headers, body: body, form_data: form_data, auth: auth)
 
       response = request_with_retry(action: action, path: path, request: request)
 
       response.body
+    end
+
+    def generic_request(path:, verb:, headers: nil, body: nil, form_data: nil, username: nil, password: nil)
+      raise(ArgumentError, 'setting form data will overwrite supplied content-type') unless headers_and_form_data_compatible? headers, form_data
+      raise(ArgumentError, 'setting form data will overwrite supplied body') if body && form_data
+
+      request = Net::HTTP.const_get(verb).new(path, headers)
+      request.body = body if body
+      request.set_form_data form_data if form_data
+      request.basic_auth(username, password) if username && password
+      request
     end
 
     private
@@ -112,6 +122,11 @@ module OpinionatedHTTP
     def retry_sleep_interval(retry_count)
       return 0 if retry_count <= 1
       (retry_multiplier ** (retry_count - 1)) * retry_interval
+    end
+
+    def headers_and_form_data_compatible?(headers, form_data)
+      return true if headers.nil? || form_data.nil?
+      !headers.keys.map(&:downcase).include? 'content-type'
     end
   end
 end
