@@ -57,7 +57,7 @@ module OpinionatedHTTP
 
     def post(action:, path: "/#{action}", headers: nil, body: nil, form_data: nil, username: nil, password: nil)
       path    = "/#{path}" unless path.start_with?("/")
-      request = generic_request(path: path, verb: 'Post', headers: headers, body: body, form_data: form_data, auth: auth)
+      request = generic_request(path: path, verb: 'Post', headers: headers, body: body, form_data: form_data, username: username, password: password)
 
       response = request_with_retry(action: action, path: path, request: request)
 
