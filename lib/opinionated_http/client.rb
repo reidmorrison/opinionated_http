@@ -11,32 +11,70 @@ module OpinionatedHTTP
     HTTP_RETRY_CODES = %w[502 503 504].freeze
 
     attr_reader :secret_config_prefix, :logger, :metric_prefix, :error_class, :driver,
-                :retry_count, :retry_interval, :retry_multiplier, :http_retry_codes
+                :retry_count, :retry_interval, :retry_multiplier, :http_retry_codes,
+                :url, :pool_size, :keep_alive, :proxy, :force_retry, :max_redirects,
+                :open_timeout, :read_timeout, :idle_timeout, :pool_timeout, :warn_timeout
 
-    def initialize(secret_config_prefix:, logger: nil, metric_prefix:, error_class:, **options)
+    # Any option supplied here can be overridden if that corresponding value is set in Secret Config.
+    # Except for any values passed directly to Persistent HTTP under `**options`.
+    def initialize(
+      secret_config_prefix:,
+      metric_prefix:,
+      error_class:,
+      logger: nil,
+      retry_count: 11,
+      retry_interval: 0.01,
+      retry_multiplier: 1.8,
+      http_retry_codes: HTTP_RETRY_CODES.join(","),
+      url: nil,
+      pool_size: 100,
+      open_timeout: 10,
+      read_timeout: 10,
+      idle_timeout: 300,
+      keep_alive: 300,
+      pool_timeout: 5,
+      warn_timeout: 0.25,
+      proxy: :ENV,
+      force_retry: true,
+      max_redirects: 10,
+      **options
+    )
       @metric_prefix    = metric_prefix
       @logger           = logger || SemanticLogger[self]
       @error_class      = error_class
-      @retry_count      = SecretConfig.fetch("#{secret_config_prefix}/retry_count", type: :integer, default: 11)
-      @retry_interval   = SecretConfig.fetch("#{secret_config_prefix}/retry_interval", type: :float, default: 0.01)
-      @retry_multiplier = SecretConfig.fetch("#{secret_config_prefix}/retry_multiplier", type: :float, default: 1.8)
-      http_retry_codes  = SecretConfig.fetch("#{secret_config_prefix}/http_retry_codes", type: :string, default: HTTP_RETRY_CODES.join(","))
+      @retry_count      = SecretConfig.fetch("#{secret_config_prefix}/retry_count", type: :integer, default: retry_count)
+      @retry_interval   = SecretConfig.fetch("#{secret_config_prefix}/retry_interval", type: :float, default: retry_interval)
+      @retry_multiplier = SecretConfig.fetch("#{secret_config_prefix}/retry_multiplier", type: :float, default: retry_multiplier)
+      @max_redirects    = SecretConfig.fetch("#{secret_config_prefix}/max_redirects", type: :integer, default: max_redirects)
+      http_retry_codes  = SecretConfig.fetch("#{secret_config_prefix}/http_retry_codes", type: :string, default: http_retry_codes)
       @http_retry_codes = http_retry_codes.split(",").collect(&:strip)
+
+      @url = url.nil? ? SecretConfig["#{secret_config_prefix}/url"] : SecretConfig.fetch("#{secret_config_prefix}/url", default: url)
+
+      @pool_size    = SecretConfig.fetch("#{secret_config_prefix}/pool_size", type: :integer, default: pool_size)
+      @open_timeout = SecretConfig.fetch("#{secret_config_prefix}/open_timeout", type: :float, default: open_timeout)
+      @read_timeout = SecretConfig.fetch("#{secret_config_prefix}/read_timeout", type: :float, default: read_timeout)
+      @idle_timeout = SecretConfig.fetch("#{secret_config_prefix}/idle_timeout", type: :float, default: idle_timeout)
+      @keep_alive   = SecretConfig.fetch("#{secret_config_prefix}/keep_alive", type: :float, default: keep_alive)
+      @pool_timeout = SecretConfig.fetch("#{secret_config_prefix}/pool_timeout", type: :float, default: pool_timeout)
+      @warn_timeout = SecretConfig.fetch("#{secret_config_prefix}/warn_timeout", type: :float, default: warn_timeout)
+      @proxy        = SecretConfig.fetch("#{secret_config_prefix}/proxy", type: :symbol, default: proxy)
+      @force_retry  = SecretConfig.fetch("#{secret_config_prefix}/force_retry", type: :boolean, default: force_retry)
 
       internal_logger = OpinionatedHTTP::Logger.new(@logger)
       new_options     = {
         logger:       internal_logger,
         debug_output: internal_logger,
         name:         "",
-        pool_size:    SecretConfig.fetch("#{secret_config_prefix}/pool_size", type: :integer, default: 100),
-        open_timeout: SecretConfig.fetch("#{secret_config_prefix}/open_timeout", type: :float, default: 10),
-        read_timeout: SecretConfig.fetch("#{secret_config_prefix}/read_timeout", type: :float, default: 10),
-        idle_timeout: SecretConfig.fetch("#{secret_config_prefix}/idle_timeout", type: :float, default: 300),
-        keep_alive:   SecretConfig.fetch("#{secret_config_prefix}/keep_alive", type: :float, default: 300),
-        pool_timeout: SecretConfig.fetch("#{secret_config_prefix}/pool_timeout", type: :float, default: 5),
-        warn_timeout: SecretConfig.fetch("#{secret_config_prefix}/warn_timeout", type: :float, default: 0.25),
-        proxy:        SecretConfig.fetch("#{secret_config_prefix}/proxy", type: :symbol, default: :ENV),
-        force_retry:  SecretConfig.fetch("#{secret_config_prefix}/force_retry", type: :boolean, default: true)
+        pool_size:    @pool_size,
+        open_timeout: @open_timeout,
+        read_timeout: @read_timeout,
+        idle_timeout: @idle_timeout,
+        keep_alive:   @keep_alive,
+        pool_timeout: @pool_timeout,
+        warn_timeout: @warn_timeout,
+        proxy:        @proxy,
+        force_retry:  @force_retry
       }
 
       url               = SecretConfig["#{secret_config_prefix}/url"]
