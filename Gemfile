@@ -1,14 +1,14 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
 gemspec
 
-gem 'awesome_print'
-gem 'rake'
+gem "awesome_print"
+gem "rake"
 
 group :development do
-  gem 'rubocop'
+  gem "rubocop"
 end
 
 group :test do
-  gem 'minitest'
+  gem "minitest"
 end

@@ -108,7 +108,9 @@ module OpinionatedHTTP
       request = Net::HTTP.const_get(verb).new(path, headers)
 
       raise(ArgumentError, "#{request.class.name} does not support a request body") if body && !request.request_body_permitted?
-      raise(ArgumentError, ":parameters cannot be supplied for #{request.class.name}") if parameters && !request.response_body_permitted?
+      if parameters && !request.response_body_permitted?
+        raise(ArgumentError, ":parameters cannot be supplied for #{request.class.name}")
+      end
 
       request.body = body if body
       request.set_form_data form_data if form_data
@@ -148,7 +150,7 @@ module OpinionatedHTTP
       if http_retry_codes.include?(response.code)
         if try_count < retry_count
           try_count += 1
-          duration  = retry_sleep_interval(try_count)
+          duration = retry_sleep_interval(try_count)
           logger.warn(message: "HTTP #{http_method}: #{action} Failure: (#{response.code}) #{response.message}. Retry: #{try_count}", metric: "#{metric_prefix}/retry", duration: duration * 1_000)
           sleep(duration)
           response = request_with_retry(action: action, request: request, try_count: try_count)
@@ -179,7 +181,7 @@ module OpinionatedHTTP
     def retry_sleep_interval(retry_count)
       return 0 if retry_count <= 1
 
-      (retry_multiplier ** (retry_count - 1)) * retry_interval
+      (retry_multiplier**(retry_count - 1)) * retry_interval
     end
 
     def headers_and_form_data_compatible?(headers, form_data)

@@ -20,10 +20,10 @@ module OpinionatedHTTP
 
       describe "get" do
         it "succeeds" do
-          output   = {zip: '12345', population: 54321}
+          output   = {zip: "12345", population: 54_321}
           body     = output.to_json
-          response = stub_request(Net::HTTPSuccess, 200, 'OK', body) do
-            http.get(action: 'lookup', parameters: {zip: '12345'})
+          response = stub_request(Net::HTTPSuccess, 200, "OK", body) do
+            http.get(action: "lookup", parameters: {zip: "12345"})
           end
           assert_equal body, response
         end
@@ -31,19 +31,19 @@ module OpinionatedHTTP
 
       describe "post" do
         it "succeeds with body" do
-          output   = {zip: '12345', population: 54321}
+          output   = {zip: "12345", population: 54_321}
           body     = output.to_json
-          response = stub_request(Net::HTTPSuccess, 200, 'OK', body) do
-            http.post(action: 'lookup', body: body)
+          response = stub_request(Net::HTTPSuccess, 200, "OK", body) do
+            http.post(action: "lookup", body: body)
           end
           assert_equal body, response
         end
 
         it "with form data" do
-          output   = {zip: '12345', population: 54321}
+          output   = {zip: "12345", population: 54_321}
           body     = output.to_json
-          response = stub_request(Net::HTTPSuccess, 200, 'OK', body) do
-            http.post(action: 'lookup', form_data: output)
+          response = stub_request(Net::HTTPSuccess, 200, "OK", body) do
+            http.post(action: "lookup", form_data: output)
           end
           assert_equal body, response
         end
@@ -127,7 +127,7 @@ module OpinionatedHTTP
       end
 
       def stub_request(klass, code, msg, body, &block)
-        response = klass.new('1.1', code, msg)
+        response = klass.new("1.1", code, msg)
         response.stub(:body, body) do
           http.driver.stub(:request, response, &block)
         end
