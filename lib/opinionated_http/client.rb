@@ -86,14 +86,14 @@ module OpinionatedHTTP
     def get(action:, path: "/#{action}", **args)
       request  = build_request(path: path, verb: "Get", **args)
       response = request(action: action, request: request)
-      extract_body(response)
+      extract_body(response, 'GET', action)
     end
 
     def post(action:, path: "/#{action}", **args)
       request = build_request(path: path, verb: "Post", **args)
 
       response = request(action: action, request: request)
-      extract_body(response)
+      extract_body(response, 'POST', action)
     end
 
     def build_request(verb:, path:, headers: nil, body: nil, form_data: nil, username: nil, password: nil, parameters: nil)
@@ -164,7 +164,7 @@ module OpinionatedHTTP
       response
     end
 
-    def extract_body(response)
+    def extract_body(response, http_method, action)
       return response.body if response.is_a?(Net::HTTPSuccess)
 
       message = "HTTP #{http_method}: #{action} Failure: (#{response.code}) #{response.message}"

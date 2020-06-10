@@ -27,6 +27,16 @@ module OpinionatedHTTP
           end
           assert_equal body, response
         end
+
+        it "fails" do
+          message = "HTTP GET: lookup Failure: (403) Forbidden"
+          error = assert_raises ServiceError do
+            stub_request(Net::HTTPForbidden, 403, "Forbidden", "") do
+              http.get(action: "lookup", parameters: {zip: "12345"})
+            end
+          end
+          assert_equal message, error.message
+        end
       end
 
       describe "post" do
@@ -46,6 +56,29 @@ module OpinionatedHTTP
             http.post(action: "lookup", form_data: output)
           end
           assert_equal body, response
+        end
+
+        it "fails with body" do
+          message = "HTTP POST: lookup Failure: (403) Forbidden"
+          output  = {zip: "12345", population: 54_321}
+          body    = output.to_json
+          error   = assert_raises ServiceError do
+            stub_request(Net::HTTPForbidden, 403, "Forbidden", "") do
+              http.post(action: "lookup", body: body)
+            end
+          end
+          assert_equal message, error.message
+        end
+
+        it "fails with form data" do
+          output  = {zip: "12345", population: 54_321}
+          message = "HTTP POST: lookup Failure: (403) Forbidden"
+          error   = assert_raises ServiceError do
+            stub_request(Net::HTTPForbidden, 403, "Forbidden", "") do
+              http.post(action: "lookup", form_data: output)
+            end
+          end
+          assert_equal message, error.message
         end
       end
 
