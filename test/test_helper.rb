@@ -3,7 +3,7 @@ ENV["TZ"] = "America/New_York"
 
 require "yaml"
 require "minitest/autorun"
-require "awesome_print"
+require "amazing_print"
 require "secret_config"
 require "semantic_logger"
 require "opinionated_http"
