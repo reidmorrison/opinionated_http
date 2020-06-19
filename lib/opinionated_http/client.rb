@@ -39,27 +39,29 @@ module OpinionatedHTTP
       max_redirects: 10,
       **options
     )
-      @metric_prefix    = metric_prefix
-      @logger           = logger || SemanticLogger[self]
-      @error_class      = error_class
-      @retry_count      = SecretConfig.fetch("#{secret_config_prefix}/retry_count", type: :integer, default: retry_count)
-      @retry_interval   = SecretConfig.fetch("#{secret_config_prefix}/retry_interval", type: :float, default: retry_interval)
-      @retry_multiplier = SecretConfig.fetch("#{secret_config_prefix}/retry_multiplier", type: :float, default: retry_multiplier)
-      @max_redirects    = SecretConfig.fetch("#{secret_config_prefix}/max_redirects", type: :integer, default: max_redirects)
-      http_retry_codes  = SecretConfig.fetch("#{secret_config_prefix}/http_retry_codes", type: :string, default: http_retry_codes)
-      @http_retry_codes = http_retry_codes.split(",").collect(&:strip)
+      @metric_prefix = metric_prefix
+      @logger        = logger || SemanticLogger[self]
+      @error_class   = error_class
+      SecretConfig.configure(secret_config_prefix) do |config|
+        @retry_count      = config.fetch("retry_count", type: :integer, default: retry_count)
+        @retry_interval   = config.fetch("retry_interval", type: :float, default: retry_interval)
+        @retry_multiplier = config.fetch("retry_multiplier", type: :float, default: retry_multiplier)
+        @max_redirects    = config.fetch("max_redirects", type: :integer, default: max_redirects)
+        http_retry_codes  = config.fetch("http_retry_codes", type: :string, default: http_retry_codes)
+        @http_retry_codes = http_retry_codes.split(",").collect(&:strip)
 
-      @url = url.nil? ? SecretConfig["#{secret_config_prefix}/url"] : SecretConfig.fetch("#{secret_config_prefix}/url", default: url)
+        @url = url.nil? ? config.fetch("url") : config.fetch("url", default: url)
 
-      @pool_size    = SecretConfig.fetch("#{secret_config_prefix}/pool_size", type: :integer, default: pool_size)
-      @open_timeout = SecretConfig.fetch("#{secret_config_prefix}/open_timeout", type: :float, default: open_timeout)
-      @read_timeout = SecretConfig.fetch("#{secret_config_prefix}/read_timeout", type: :float, default: read_timeout)
-      @idle_timeout = SecretConfig.fetch("#{secret_config_prefix}/idle_timeout", type: :float, default: idle_timeout)
-      @keep_alive   = SecretConfig.fetch("#{secret_config_prefix}/keep_alive", type: :float, default: keep_alive)
-      @pool_timeout = SecretConfig.fetch("#{secret_config_prefix}/pool_timeout", type: :float, default: pool_timeout)
-      @warn_timeout = SecretConfig.fetch("#{secret_config_prefix}/warn_timeout", type: :float, default: warn_timeout)
-      @proxy        = SecretConfig.fetch("#{secret_config_prefix}/proxy", type: :symbol, default: proxy)
-      @force_retry  = SecretConfig.fetch("#{secret_config_prefix}/force_retry", type: :boolean, default: force_retry)
+        @pool_size    = config.fetch("pool_size", type: :integer, default: pool_size)
+        @open_timeout = config.fetch("open_timeout", type: :float, default: open_timeout)
+        @read_timeout = config.fetch("read_timeout", type: :float, default: read_timeout)
+        @idle_timeout = config.fetch("idle_timeout", type: :float, default: idle_timeout)
+        @keep_alive   = config.fetch("keep_alive", type: :float, default: keep_alive)
+        @pool_timeout = config.fetch("pool_timeout", type: :float, default: pool_timeout)
+        @warn_timeout = config.fetch("warn_timeout", type: :float, default: warn_timeout)
+        @proxy        = config.fetch("proxy", type: :symbol, default: proxy)
+        @force_retry  = config.fetch("force_retry", type: :boolean, default: force_retry)
+      end
 
       internal_logger = OpinionatedHTTP::Logger.new(@logger)
       new_options     = {
@@ -86,14 +88,14 @@ module OpinionatedHTTP
     def get(action:, path: "/#{action}", **args)
       request  = build_request(path: path, verb: "Get", **args)
       response = request(action: action, request: request)
-      extract_body(response, 'GET', action)
+      extract_body(response, "GET", action)
     end
 
     def post(action:, path: "/#{action}", **args)
       request = build_request(path: path, verb: "Post", **args)
 
       response = request(action: action, request: request)
-      extract_body(response, 'POST', action)
+      extract_body(response, "POST", action)
     end
 
     def build_request(verb:, path:, headers: nil, body: nil, form_data: nil, username: nil, password: nil, parameters: nil)
@@ -134,8 +136,8 @@ module OpinionatedHTTP
         begin
           payload = {}
           if logger.trace?
-            payload[:parameters] = parameters
-            payload[:path]       = request.path
+            # payload[:parameters] = parameters
+            payload[:path] = request.path
           end
           message = "HTTP #{http_method}: #{action}" if logger.debug?
 

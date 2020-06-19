@@ -1,4 +1,4 @@
 test:
-  fake_supplier:
+  fake_service:
     url: https://example.org
 
