@@ -6,7 +6,6 @@ Gem::Specification.new do |s|
   s.name    = "opinionated_http"
   s.version = OpinionatedHTTP::VERSION
   s.authors = ["Reid Morrison"]
-  s.email   = ["reidmo@gmail.com"]
 
   s.summary     = "Opinionated HTTP Client"
   s.description = "HTTP Client with retries. Uses PersistentHTTP for http connection pooling, Semantic Logger for logging and metrics, and uses Secret Config for its configuration."
