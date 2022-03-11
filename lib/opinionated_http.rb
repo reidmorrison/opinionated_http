@@ -7,6 +7,8 @@ require "opinionated_http/version"
 module OpinionatedHTTP
   autoload :Client, "opinionated_http/client"
   autoload :Logger, "opinionated_http/logger"
+  autoload :Request, "opinionated_http/request"
+  autoload :Response, "opinionated_http/response"
 
   #
   # Create a new Opinionated HTTP instance.

@@ -36,6 +36,10 @@ Parameters:
     Required.
   logger:
     Default: SemanticLogger[OpinionatedHTTP]
+  format: [:json | nil]
+    Optionally set the format for http requests.
+    Currently only supports `:json`, which will format the request and response to/from JSON.
+    It will also set the `Content-Type` http header to `application/json`.
   Other options as supported by PersistentHTTP
   #TODO: Expand PersistentHTTP options here
 
