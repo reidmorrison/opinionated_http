@@ -26,7 +26,7 @@ module OpinionatedHTTP
       return body if success?
 
       error_message = "HTTP #{verb.upcase}: #{action} Failure: (#{code}) #{message}"
-      logger.error(message: error_message, metric: "#{metric_prefix}/exception")
+      logger.error(message: error_message, metric: "#{metric_prefix}/exception", payload: {body: body})
       raise(error_class, error_message)
     end
 

@@ -56,7 +56,7 @@ module OpinionatedHTTP
       case format
       when :json
         headers["Content-Type"] = "application/json"
-        body.to_json #unless body.is_a?(String) || body.nil?
+        body.to_json unless body.is_a?(String) || body.nil?
       when nil
         body
       else

@@ -39,9 +39,10 @@ module OpinionatedHTTP
       force_retry: true,
       max_redirects: 10,
       after_connect: nil,
-      verify_peer: false,  # TODO: PersistentHTTP keeps returning cert expired even when it is valid.
+      verify_peer: false, # TODO: PersistentHTTP keeps returning cert expired even when it is valid.
       certificate: nil,
-      private_key: nil
+      private_key: nil,
+      header: nil
     )
       @metric_prefix = metric_prefix
       @logger        = logger || SemanticLogger[self]
@@ -90,7 +91,8 @@ module OpinionatedHTTP
         after_connect: @after_connect,
         certificate:   @certificate,
         private_key:   @private_key,
-        verify_mode:   @verify_peer ? OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT : OpenSSL::SSL::VERIFY_NONE
+        verify_mode:   @verify_peer ? OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT : OpenSSL::SSL::VERIFY_NONE,
+        header:        header
       )
     end
 
@@ -101,9 +103,31 @@ module OpinionatedHTTP
       Response.new(http_response, request)
     end
 
-    def post(request: nil, **args)
+    def post(request: nil, json: nil, body: nil, **args)
+      raise(ArgumentError, "Either set :json or :body") if json && body
+
       request       ||= Request.new(**args)
+      if json
+        request.format = :json
+        request.body   = json
+      else
+        request.body = body
+      end
       request.verb  = "Post"
+      http_response = request(request)
+      Response.new(http_response, request)
+    end
+
+    def delete(request: nil, **args)
+      request       ||= Request.new(**args)
+      request.verb  = "Delete"
+      http_response = request(request)
+      Response.new(http_response, request)
+    end
+
+    def patch(request: nil, **args)
+      request       ||= Request.new(**args)
+      request.verb  = "Patch"
       http_response = request(request)
       Response.new(http_response, request)
     end

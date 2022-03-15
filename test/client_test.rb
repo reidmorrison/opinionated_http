@@ -12,8 +12,7 @@ class ClientTest < Minitest::Test
         secret_config_prefix: "fake_service",
         metric_prefix:        "FakeService",
         logger:               SemanticLogger["FakeService"],
-        error_class:          ServiceError,
-        header:               {"Content-Type" => "application/json"}
+        error_class:          ServiceError
       )
     end
 
@@ -55,6 +54,15 @@ class ClientTest < Minitest::Test
         stub_request(Net::HTTPSuccess, 200, "OK", body) do
           response = http.post(action: "lookup", form_data: output)
           assert_equal body, response.body!
+        end
+      end
+
+      it "with JSON data" do
+        request = {zip: "12345", population: 54_321}
+        body   = request.to_json
+        stub_request(Net::HTTPSuccess, 200, "OK", body) do
+          response = http.post(action: "lookup", json: request)
+          assert_equal request, response.body!.transform_keys!(&:to_sym)
         end
       end
 
