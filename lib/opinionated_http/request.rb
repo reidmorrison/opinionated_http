@@ -51,12 +51,11 @@ module OpinionatedHTTP
     private
 
     def format_body
-      return if body.nil?
-
       case format
       when :json
         headers["Content-Type"] = "application/json"
-        body.to_json unless body.is_a?(String) || body.nil?
+        headers["Accept"]       = "application/json"
+        body.is_a?(String) || body.nil? ? body : body.to_json
       when nil
         body
       else

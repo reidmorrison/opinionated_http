@@ -25,7 +25,8 @@ class RequestTest < Minitest::Test
         req = OpinionatedHTTP::Request.new(action: action, path: path, verb: post_verb, format: :json, body: json_request).http_request
 
         assert_equal json_request.to_json, req.body
-        assert_equal "application/json", req["Content-Type"]
+        assert_equal "application/json", req["content-type"], -> { req.to_hash.ai }
+        assert_equal "application/json", req["accept"], -> { req.to_hash.ai }
       end
 
       it "returns a request with supplied headers" do

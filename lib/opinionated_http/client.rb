@@ -147,14 +147,8 @@ module OpinionatedHTTP
       http_method = request.method.upcase
       response    =
         begin
-          payload = {}
-          if logger.trace?
-            # payload[:parameters] = parameters
-            payload[:path] = request.path
-          end
-          message = "HTTP #{http_method}: #{action}" if logger.debug?
-
-          logger.benchmark_info(message: message, metric: "#{metric_prefix}/#{action}", payload: payload) do
+          message = "HTTP #{http_method}: #{action} #{request.path}"
+          logger.benchmark_info(message: message, metric: "#{metric_prefix}/#{action}") do
             driver.request(request)
           end
         rescue StandardError => e
